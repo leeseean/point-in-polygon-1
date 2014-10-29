@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>Point in Polygon</title>
+    <style>
+      body { -webkit-user-select:none; font-family:georgia,serif }
+      small { font-size:20px; margin-left:10px }
+      input, label { cursor:pointer }
+      div { position:relative; height:600px; width:800px; background:lightgray }
+      canvas { position:absolute; left:0; top:0 }
+    </style>
+  </head>
+  <body>
+    <h1>Point in Polygon<small>(click the canvas to set the point)</small></h1>
+    <p>
+      <span>Choose algorithm:</span>
+      <input type=radio value=ray id=ray name=algorithm checked>
+      <label for=ray>ray casting (crossing number / even-odd rule)</label>
+      <input type=radio value=winding id=winding name=algorithm>
+      <label for=winding>winding number (angle summation)</label>
+    </p>
+    <div>
+      <canvas width=800 height=600></canvas>
+      <canvas width=800 height=600></canvas>
+    </div>
+    <p></p>
+    <script src="ray-casting.js"></script>
+    <script src="winding-number.js"></script>
+    <script>
+      var polygon = [{x: 80, y: 280}, {x: 160, y: 220}, {x: 210, y: 240}, {x: 310, y: 90}, {x: 480, y: 140}, {x: 320, y: 220}, {x: 430, y: 280}, {x: 560, y: 260}, {x: 590, y: 160}, {x: 690, y: 70}, {x: 640, y: 260}, {x: 700, y: 320}, {x: 500, y: 390}, {x: 630, y: 490}, {x: 380, y: 430}, {x: 320, y: 310}, {x: 230, y: 370}, {x: 300, y: 450}, {x: 130, y: 380}]
+      var rRadio = document.getElementById('ray')
+      var wRadio = document.getElementById('winding')
+      var log = document.getElementsByTagName('p')[1]
+      var div = document.getElementsByTagName('div')[0]
+      var ctx1 = div.children[0].getContext('2d')
+      var ctx2 = div.children[1].getContext('2d')
+      ctx1.beginPath()
+      ctx1.moveTo(polygon[polygon.length - 1].x, polygon[polygon.length - 1].y)
+      for(var i = 0; i < polygon.length; i++) {
+        ctx1.lineTo(polygon[i].x, polygon[i].y)
+      }
+      ctx1.fillStyle = 'white'
+      ctx1.strokeStyle = 'black'
+      ctx1.fill()
+      ctx1.stroke()
+      ctx1.closePath()
+      div.addEventListener('click', function(e) {
+        var point = {x: e.pageX - div.offsetLeft, y: e.pageY - div.offsetTop}
+        if(rRadio.checked) {
+          var check = rayCasting(point, polygon)
+          ctx2.clearRect(0, 0, div.offsetWidth, div.offsetHeight)
+          ctx2.fillStyle = ctx2.strokeStyle = ['lime', 'red', 'blue'][['on', 'in', 'out'].indexOf(check)]
+          ctx2.beginPath()
+          ctx2.arc(point.x, point.y, 2, 0, Math.PI * 2, true)
+          ctx2.fill()
+          ctx2.moveTo(point.x, point.y)
+          ctx2.lineTo(div.offsetWidth, point.y)
+          ctx2.stroke()
+          ctx2.closePath()
+        } else {
+          var check = windingNumber(point, polygon)
+          ctx2.clearRect(0, 0, div.offsetWidth, div.offsetHeight)
+          ctx2.fillStyle = ctx2.strokeStyle = ['lime', 'red', 'blue'][['on', 'in', 'out'].indexOf(check)]
+          for(var i = 0; i < polygon.length; i++) {
+            ctx2.beginPath()
+            ctx2.moveTo(point.x, point.y)
+            ctx2.lineTo(polygon[i].x, polygon[i].y)
+            ctx2.stroke()
+            ctx2.closePath()
+          }
+          ctx2.beginPath()        
+          ctx2.arc(point.x, point.y, 2, 0, Math.PI * 2, true)
+          ctx2.fill()
+          ctx2.closePath()
+        }
+        log.innerHTML = 'Point <strong>[' + point.x + ', ' + point.y + ']</strong> is ' + (check === 'on' ? 'on a polygon side.' : check + 'side the polygon.')
+      }, false)
+    </script>
+  </body>
+</html>
